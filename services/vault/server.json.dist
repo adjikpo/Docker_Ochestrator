@@ -1,0 +1,6 @@
+{
+    "secret_name": {
+        "secret_key": "secret_value"
+    }
+
+}

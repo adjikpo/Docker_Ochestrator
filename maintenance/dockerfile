@@ -1,0 +1,8 @@
+FROM ubuntu
+
+RUN apt update && apt install -y \
+    ssh \
+    sshpass \
+    git
+
+RUN mkdir /root/.ssh && printf "Host *\n    PubkeyAceptedKeyTypes +ssh-rsa\n    StrictHostKeyChecking no" > /root/.ssh/config

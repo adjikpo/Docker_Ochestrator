@@ -18,4 +18,4 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirmane -- "${BASH_SOURCE[0]}" )" $> /dev/null && pwd )
 cd $SCRIPT_DIR/..
 
-#TODO add a dockerfile maintenance 
+#TODO add a dockerfile maintenance install the sshkey

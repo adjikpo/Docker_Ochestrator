@@ -1,0 +1,9 @@
+services/frontend/src
+services/backend/src
+**/secrets.json
+.env
+.idea
+certs
+**/site-packages
+data/
+__pycache__

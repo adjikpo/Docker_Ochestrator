@@ -1,0 +1,78 @@
+version: '3.4'
+
+services:
+  maintenance:
+    build: ./maintenance
+    volumes:
+      - ./:/mnt/host
+    environment:
+      SSH_GIT_FRONTEND: ${SSH_GIT_FRONTEND}
+      SSH_GIT_BACKEND: ${SSH_GIT_BACKEND}
+      SH_GIT_API_GATEWAY: ${SSH_GIT_API_GATEWAY}
+
+  frontend:
+    build: ./services/frontend
+    volumes:
+      - ./services/frontend/src:/app
+      - ./services/frontend/entrypoint.sh:/entrypoint.sh
+      - ./certs/:/usr/local/share/ca-certificates/
+    ports:
+      - ${FRONTEND_PORT}:8080
+  
+  backend:
+    build: ./services/backend
+    hostname: backend.internal
+    volumes:
+      - ./services/backend/src:/app
+      - ./services/backend/site-packages:/usr/local/lib/python3.10/site-packages/
+      - ./certs/:/usr/local/share/ca-certificates/
+    environment:
+      VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID}
+      VAULT_BASE_URL: ${VAULT_BASE_URL}
+  
+  database:
+    image: postgres:11-alpine
+    hostname: database.internal
+    restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - ${DATABASE_PORT}:5432
+
+  vault:
+    build: ./services/vault
+    hostname: vault.internal
+    restart: always
+    ports:
+      - ${VAULT_PORT_FORWARDED}:8200
+    volumes:
+      - ./services/vault/secrets.json:/vault/secrets.json
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+
+  api_gateway:
+    image: devopsfaith/krakend
+    restart: always
+    environment:
+      - FC_ENABLE=1
+      - FC_SETTINGS=/etc/krakend/FC_SETTINGS
+      - FC_TEMPLATES=/etc/krakend/FC_TEMPLATES
+    ports:
+      - ${API_GATEWAY_PORT}:8080
+    volumes:
+      - ./data/api-gateway/krakend/krakend.json:/etc/krakend/krakend.json
+      - ./data/api-gateway/krakend/settings:etc/krakend/settings
+      - ./data/api-gateway/krakend/templates:etc/krakend/templates
+      - ./data/api-gateway/krakend/certs:/etc/krakend/certs
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+    - database
+    ports:
+      - ${ADMINER_PORT}:8080
